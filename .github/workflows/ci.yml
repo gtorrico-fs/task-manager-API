@@ -83,32 +83,23 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
-      # Paso 4: "compila" todos los archivos .py de la carpeta app/.
-      # Python es interpretado, así que esto detecta errores de sintaxis
-      # (paréntesis sin cerrar, indentación incorrecta, etc.).
+      # Paso 4: "compila" los archivos .py del proyecto (main.py y sus carpetas).
+      # Se listan las carpetas a propósito: así no se compila venv/ ni otras
+      # carpetas que no son código de la aplicación.
       - name: Verificar que el código compila
-        run: python -m compileall -q app
+        run: python -m compileall -q main.py api core schemas utils
 
       # Paso 5: importa la aplicación como lo haría uvicorn al arrancar.
-      # Detecta imports rotos, módulos que faltan o errores al registrar los
-      # endpoints. No necesita MongoDB: MongoClient se conecta de forma
-      # perezosa, solo cuando se ejecuta la primera consulta.
       - name: Verificar que la aplicación arranca (importa y registra rutas)
         run: |
           python - <<'PY'
-          from app.main import app
+          from main import app
 
-          # Recorre las rutas registradas en FastAPI y arma una lista legible
-          # con el formato "MÉTODO /ruta". Se ignoran las rutas sin métodos HTTP
-          # (por ejemplo, archivos estáticos).
           rutas = sorted(
               f"{','.join(sorted(r.methods))} {r.path}"
               for r in app.routes
               if hasattr(r, "methods")
           )
-
-          # Muestra en el log del CI cuántas rutas se cargaron y cuáles son,
-          # útil para comprobar que cada feature quedó registrada.
           print(f"Aplicación cargada correctamente: {len(rutas)} rutas")
           for ruta in rutas:
               print("  ", ruta)
