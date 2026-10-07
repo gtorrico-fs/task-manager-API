@@ -91,6 +91,17 @@ jobs:
 
       # Paso 5: importa la aplicación como lo haría uvicorn al arrancar.
       - name: Verificar que la aplicación arranca (importa y registra rutas)
+        # En CI no existe el archivo .env (está en .gitignore), así que las
+        # variables que exige core/config.py se definen aquí con valores de
+        # prueba. No son credenciales reales: MongoClient no se conecta al
+        # importar, solo al ejecutar la primera consulta.
+        env:
+          APP_NAME: Gestor de Tareas
+          APP_VERSION: 1.0.0
+          API_V1_PREFIX: /api/v1
+          MONGODB_URI: mongodb://localhost:27017
+          MONGODB_DB: gestor_tareas_ci
+          MONGODB_COLLECTION: tareas
         run: |
           python - <<'PY'
           from main import app
